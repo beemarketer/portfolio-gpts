@@ -26,16 +26,6 @@ st.sidebar.subheader("📌 투자 성향 설정")
 risk_pref = st.sidebar.slider("안정성 (1: 매우 공격적 ~ 5: 매우 안정적)", 1, 5, 3)
 dividend_pref = st.sidebar.slider("배당 선호도 (1: 중요하지 않음 ~ 5: 매우 중요)", 1, 5, 3)
 
-# 시각적 진단 차트 추가
-st.sidebar.subheader("📊 성향 시각화")
-fig, ax = plt.subplots()
-ax.barh(["안정성", "배당 중요도"], [risk_pref, dividend_pref], color=["skyblue", "lightgreen"])
-ax.set_xlim(0, 5)
-ax.set_xticks(range(1, 6))
-for i, v in enumerate([risk_pref, dividend_pref]):
-    ax.text(v + 0.1, i, str(v), va='center')
-st.sidebar.pyplot(fig)
-
 # 스타일 태그 출력
 st.sidebar.subheader("🏷️ 예측 스타일 태그")
 style_tags = []
