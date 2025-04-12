@@ -20,18 +20,29 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KE
 @st.cache_data
 def get_dataroma_portfolio(code):
     url = f"https://www.dataroma.com/m/holdings.php?m={code}"
-    res = requests.get(url)
-    soup = BeautifulSoup(res.text, 'html.parser')
-    table = soup.find_all("table")[1]
-    rows = table.find_all("tr")[1:]
-    tickers = [r.find_all("td")[0].text.strip() for r in rows if r.find_all("td")]
-    return tickers
+    try:
+        res = requests.get(url, timeout=10)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        tables = soup.find_all("table")
+        if len(tables) < 2:
+            return []
+        table = tables[1]
+        rows = table.find_all("tr")[1:]
+        tickers = [r.find_all("td")[0].text.strip() for r in rows if r.find_all("td")]
+        return tickers
+    except Exception as e:
+        st.warning(f"❗ {code} 포트폴리오 로딩 실패: {str(e)}")
+        return []
 
 @st.cache_data
 def get_ark_portfolio():
     url = "https://ark-funds.com/wp-content/funds-etf/ARK_INNOVATION_ARKK_HOLDINGS.csv"
-    df = pd.read_csv(url)
-    return df['ticker'].dropna().unique().tolist()
+    try:
+        df = pd.read_csv(url)
+        return df['ticker'].dropna().unique().tolist()
+    except Exception as e:
+        st.warning(f"❗ ARK 포트폴리오 로딩 실패: {str(e)}")
+        return []
 
 famous_investors = {
     "Warren Buffett": {
@@ -119,7 +130,7 @@ if uploaded_file is not None:
                 venn2([set(tickers), set(inv_tickers)], set_labels=("내 포트폴리오", investor))
                 st.pyplot(fig)
 
-        # GPT 분석 및 리밸런싱 추천 블록 (리팩토링된 전체 구조)
+        # GPT 분석 및 리밸런싱 추천 블록
         if df is not None and not df.empty:
             st.subheader("💬 GPT에게 포트폴리오 해석 및 추천 요청")
 
