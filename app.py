@@ -6,8 +6,8 @@ from matplotlib_venn import venn2
 from openai import OpenAI
 import os
 
-st.set_page_config(page_title="GPTS 포트폴리오 배발", layout="wide")
-st.title("포트폴리오 GPTS 배발")
+st.set_page_config(page_title="주식 포트폴리오 분석", layout="wide")
+st.title("주식 포트폴리오 분석")
 
 # GPT API 키 설정
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"])
