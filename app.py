@@ -12,58 +12,58 @@ from bs4 import BeautifulSoup
 # 한글 폰트 설정
 rcParams['font.family'] = 'DejaVu Sans'
 
-st.set_page_config(page_title="GPTS 포트폴리오 배발", layout="wide")
-st.title("포트폴리오 GPTS 배발")
+st.set_page_config(page_title="주식 포트폴리오 분석", layout="wide")
+st.title("주식 포트폴리오 분석")
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"])
 
-@st.cache_data
-def get_dataroma_portfolio(code):
-    url = f"https://www.dataroma.com/m/holdings.php?m={code}"
-    try:
-        res = requests.get(url, timeout=10)
-        if res.status_code != 200 or not res.text.strip():
-            raise ValueError("Dataroma 응답 실패 또는 빈 페이지")
-        soup = BeautifulSoup(res.text, 'html.parser')
-        tables = soup.find_all("table")
-        if len(tables) < 2:
-            raise IndexError("테이블이 2개 이상 존재하지 않음")
-        table = tables[1]
-        rows = table.find_all("tr")[1:]
-        tickers = [r.find_all("td")[0].text.strip() for r in rows if r.find_all("td")]
-        return tickers
-    except Exception as e:
-        st.warning(f"❗ {code} 포트폴리오 로딩 실패: {str(e)}")
-        return []
+# @st.cache_data
+# def get_dataroma_portfolio(code):
+#     url = f"https://www.dataroma.com/m/holdings.php?m={code}"
+#     try:
+#         res = requests.get(url, timeout=10)
+#         if res.status_code != 200 or not res.text.strip():
+#             raise ValueError("Dataroma 응답 실패 또는 빈 페이지")
+#         soup = BeautifulSoup(res.text, 'html.parser')
+#         tables = soup.find_all("table")
+#         if len(tables) < 2:
+#             raise IndexError("테이블이 2개 이상 존재하지 않음")
+#         table = tables[1]
+#         rows = table.find_all("tr")[1:]
+#         tickers = [r.find_all("td")[0].text.strip() for r in rows if r.find_all("td")]
+#         return tickers
+#     except Exception as e:
+#         st.warning(f"❗ {code} 포트폴리오 로딩 실패: {str(e)}")
+#         return []
 
-@st.cache_data
-def get_ark_portfolio():
-    url = "https://ark-funds.com/wp-content/funds-etf/ARK_INNOVATION_ARKK_HOLDINGS.csv"
-    try:
-        df = pd.read_csv(url)
-        return df['ticker'].dropna().unique().tolist()
-    except Exception as e:
-        st.warning(f"❗ ARK 포트폴리오 로딩 실패: {str(e)}")
-        return []
+# @st.cache_data
+# def get_ark_portfolio():
+#     url = "https://ark-funds.com/wp-content/funds-etf/ARK_INNOVATION_ARKK_HOLDINGS.csv"
+#     try:
+#         df = pd.read_csv(url)
+#         return df['ticker'].dropna().unique().tolist()
+#     except Exception as e:
+#         st.warning(f"❗ ARK 포트폴리오 로딩 실패: {str(e)}")
+#         return []
 
-famous_investors = {
-    "Warren Buffett": {
-        "tickers": get_dataroma_portfolio("BRK"),
-        "source": "Dataroma 실시간 (BRK)"
-    },
-    "Ray Dalio": {
-        "tickers": get_dataroma_portfolio("BRIDGEWATER"),
-        "source": "Dataroma 실시간 (Bridgewater)"
-    },
-    "Cathie Wood": {
-        "tickers": get_ark_portfolio(),
-        "source": "ARK Invest 실시간 (ARKK)"
-    },
-    "Michael Burry": {
-        "tickers": get_dataroma_portfolio("SCION"),
-        "source": "Dataroma 실시간 (Scion)"
-    }
-}
+# famous_investors = {
+#     "Warren Buffett": {
+#         "tickers": get_dataroma_portfolio("BRK"),
+#         "source": "Dataroma 실시간 (BRK)"
+#     },
+#     "Ray Dalio": {
+#         "tickers": get_dataroma_portfolio("BRIDGEWATER"),
+#         "source": "Dataroma 실시간 (Bridgewater)"
+#     },
+#     "Cathie Wood": {
+#         "tickers": get_ark_portfolio(),
+#         "source": "ARK Invest 실시간 (ARKK)"
+#     },
+#     "Michael Burry": {
+#         "tickers": get_dataroma_portfolio("SCION"),
+#         "source": "Dataroma 실시간 (Scion)"
+#     }
+# }
 
 uploaded_file = st.file_uploader("📂 포트폴리오 파일 업로드 (CSV 또는 Excel)", type=["xlsx", "csv"])
 
