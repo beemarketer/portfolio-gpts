@@ -38,6 +38,23 @@ else:
 
 st.sidebar.markdown(f"**투자 스타일:** {' / '.join(style_tags)}")
 
+
+# 산업/ETF 정보 가져오는 함수
+def get_business_info(ticker):
+    try:
+        info = yf.Ticker(ticker).info
+        if 'fundFamily' in info or 'category' in info or 'trackingSymbol' in info:
+            # ETF로 간주
+            index_info = info.get('category') or info.get('trackingSymbol') or "지수 정보 없음"
+            return "ETF", index_info
+        else:
+            sector = info.get("sector", "정보 없음")
+            industry = info.get("industry", "정보 없음")
+            return sector, industry
+    except Exception:
+        return "정보 없음", "정보 없음"
+
+
 if uploaded_file is not None:
     if uploaded_file.name.endswith(".csv"):
         df = pd.read_csv(uploaded_file)
@@ -68,16 +85,29 @@ if uploaded_file is not None:
         ax.axis("equal")
         st.pyplot(fig)
 
+        # 비즈니스 및 섹터 분석
+        st.subheader("🏢 비즈니스 섹터 및 ETF 분석")
+        sector_summary = []
+        for ticker in tickers:
+            sector, industry = get_business_info(ticker)
+            if sector == "ETF":
+                summary = f"{ticker} (ETF) → 추종 지수: {industry}"
+            else:
+                summary = f"{ticker} → 섹터: {sector}, 산업군: {industry}"
+            sector_summary.append(summary)
+
+        sector_info_str = "\n".join(sector_summary)
+        st.markdown("```\n" + sector_info_str + "\n```")
+
         # GPT 분석 요청
         if df is not None and not df.empty:
             st.subheader("💬 GPT에게 포트폴리오 해석 및 추천 요청")
 
-            # 투자 대가 이름만 포함
             famous_investors = [
-                "Warren Buffett: 가치 투자 대표",
-                "Ray Dalio: 글로벌 자산 분산 전략",
-                "Cathie Wood: 기술 성장주 중심",
-                "Michael Burry: 거시경제적 단기 투자"
+                "Warren Buffett",
+                "Ray Dalio",
+                "Cathie Wood",
+                "Michael Burry"
             ]
             all_investors_str = ", ".join(famous_investors)
 
@@ -89,6 +119,9 @@ if uploaded_file is not None:
                 prompt = f"""
                 다음은 사용자의 투자 포트폴리오입니다:
                 {portfolio_str}
+
+                각 종목의 산업 및 ETF 추종 지수 정보는 다음과 같습니다:
+                {sector_info_str}
 
                 유명 투자자들은 다음과 같습니다: {all_investors_str}
 
