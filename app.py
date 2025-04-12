@@ -105,7 +105,11 @@ if uploaded_file is not None:
         st.subheader("📊 실시간 시세 반영")
         data = yf.download(tickers, period="1d")["Close"]
         current_prices = data.iloc[-1].to_dict()
-        price_df = pd.DataFrame({"종목": tickers, "현재가": [current_prices[t] for t in tickers], "금액": weights})
+        price_df = pd.DataFrame({
+            "종목": tickers,
+            "현재가": [current_prices[t] for t in tickers],
+            "금액": weights
+        })
         price_df["수량"] = price_df["금액"] / price_df["현재가"]
         st.dataframe(price_df)
 
@@ -115,23 +119,7 @@ if uploaded_file is not None:
         ax.axis("equal")
         st.pyplot(fig)
 
-        st.subheader("🧠 유명 트레이드 주식 대가와 보유 종목 비교")
-        for investor, info in famous_investors.items():
-            inv_tickers = info["tickers"]
-            source_info = info["source"]
-            overlap = list(set(tickers) & set(inv_tickers))
-            with st.expander(f"{investor} 포트폴리오 비교"):
-                st.write(f"📅 데이터 출처: {source_info}")
-                st.write(f"💼 {investor}의 포트폴리오: {', '.join(inv_tickers)}")
-                if overlap:
-                    st.success(f"✅ 겹치는 종목: {', '.join(overlap)}")
-                else:
-                    st.warning("❌ 겹치는 종목 없음")
-
-                fig, ax = plt.subplots()
-                venn2([set(tickers), set(inv_tickers)], set_labels=("내 포트폴리오", investor))
-                st.pyplot(fig)
-
+        # GPT 분석 요청 (대가 비교 포함)
         if df is not None and not df.empty:
             st.subheader("💬 GPT에게 포트폴리오 해석 및 추천 요청")
 
