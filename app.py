@@ -2,14 +2,14 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
-import openai
+from openai import OpenAI
 import os
 
-st.set_page_config(page_title="GPTS 포트폴리오 분석", layout="wide")
-st.title("📈 포트폴리오 GPTS 분석")
+st.set_page_config(page_title="GPTS 포트폴리오 배발", layout="wide")
+st.title("포트폴리오 GPTS 배발")
 
-# GPT API 키 입력 (환경변수 또는 수동 입력 가능)
-openai.api_key = os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"]
+# GPT API 키 설정
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"])
 
 famous_investors = {
     "Warren Buffett": ["AAPL", "KO", "BAC", "AXP", "CVX"],
@@ -34,7 +34,7 @@ if uploaded_file is not None:
         weights = df["금액"].astype(float).tolist()
 
         st.subheader("📊 실시간 시세 반영")
-        data = yf.download(tickers, period="1d")['Close']
+        data = yf.download(tickers, period="1d")["Close"]
         current_prices = data.iloc[-1].to_dict()
         price_df = pd.DataFrame({"종목": tickers, "현재가": [current_prices[t] for t in tickers], "금액": weights})
         price_df["수량"] = price_df["금액"] / price_df["현재가"]
@@ -42,11 +42,11 @@ if uploaded_file is not None:
 
         st.subheader("📈 종목 구성 비중")
         fig, ax = plt.subplots()
-        ax.pie(weights, labels=tickers, autopct='%1.1f%%')
-        ax.axis('equal')
+        ax.pie(weights, labels=tickers, autopct="%1.1f%%")
+        ax.axis("equal")
         st.pyplot(fig)
 
-        st.subheader("🧠 유명 투자자와의 종목 비교")
+        st.subheader("🧠 유명 트레이드 주식 대가와 보유 종목 비교")
         overlap_info = []
         for investor, inv_tickers in famous_investors.items():
             overlap = list(set(tickers) & set(inv_tickers))
@@ -58,9 +58,9 @@ if uploaded_file is not None:
         else:
             st.info("유사 종목 없음")
 
-        # GPT 분석
+        # GPT 반응
         st.subheader("💬 GPT에게 포트폴리오 해석 요청")
-        if st.button("🔍 GPT 분석 시작"):
+        if st.button("🔍 GPT 반응 시작"):
             portfolio_str = "\n".join([f"{r['종목']}: {r['금액']}원" for _, r in df.iterrows()])
             prompt = f"""
             다음은 사용자의 투자 포트폴리오입니다:
@@ -70,14 +70,14 @@ if uploaded_file is not None:
             또한 Warren Buffett, Ray Dalio, Cathie Wood, Michael Burry 포트폴리오와 비교해서 겹치는 종목이 있는지, 투자 성향이 유사한지 알려줘.
             """
             with st.spinner("GPT 분석 중입니다..."):
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {"role": "system", "content": "당신은 금융 분석가입니다."},
                         {"role": "user", "content": prompt}
                     ]
                 )
-                gpt_output = response["choices"][0]["message"]["content"]
+                gpt_output = response.choices[0].message.content
                 st.markdown("#### 📝 GPT 분석 결과")
                 st.markdown(gpt_output)
     else:
